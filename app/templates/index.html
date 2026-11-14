@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task Manager</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #17211d;
+      background: #f3f6f2;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 48px 20px;
+    }
+
+    main { width: min(100%, 720px); margin: 0 auto; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #46735a;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -0.05em; }
+    .intro { margin: 10px 0 28px; color: #64716a; }
+
+    .panel {
+      padding: 24px;
+      border: 1px solid #e0e8e1;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 12px 36px rgb(34 56 41 / 7%);
+    }
+
+    form { display: grid; gap: 12px; }
+
+    input, textarea, button { font: inherit; }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #dce5dd;
+      border-radius: 10px;
+      background: #fcfdfc;
+    }
+
+    textarea { min-height: 84px; resize: vertical; }
+    input:focus, textarea:focus { outline: 3px solid #cce8d4; border-color: #609671; }
+
+    button {
+      min-height: 42px;
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: #286343;
+      color: white;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    button:hover { background: #1e5035; }
+    button:disabled { cursor: wait; opacity: 0.65; }
+
+    .form-actions { display: flex; justify-content: flex-end; }
+    .list-heading { display: flex; align-items: baseline; justify-content: space-between; margin: 28px 2px 12px; }
+    .list-heading h2 { margin: 0; font-size: 1.1rem; }
+    #task-count { color: #748078; font-size: 0.9rem; }
+    #message { min-height: 1.4em; margin: 12px 2px 0; color: #a53d32; font-size: 0.92rem; }
+    #tasks { display: grid; gap: 10px; }
+
+    .task {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: start;
+      gap: 12px;
+      padding: 15px;
+      border: 1px solid #e7ece7;
+      border-radius: 12px;
+    }
+
+    .task input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: #286343; }
+    .task-title { margin: 0; font-weight: 650; overflow-wrap: anywhere; }
+    .task-description { margin: 5px 0 0; color: #68756d; font-size: 0.92rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .task.completed .task-title { color: #87918a; text-decoration: line-through; }
+
+    .delete-button {
+      min-height: 34px;
+      padding: 6px 10px;
+      background: transparent;
+      color: #a53d32;
+    }
+
+    .delete-button:hover { background: #fff0ed; color: #862e25; }
+    .empty { margin: 0; padding: 20px; color: #748078; text-align: center; }
+
+    @media (max-width: 520px) {
+      body { padding: 30px 14px; }
+      .panel { padding: 18px; }
+      .task { grid-template-columns: auto 1fr; }
+      .delete-button { grid-column: 2; justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Task Manager</p>
+    <h1>Make a little progress.</h1>
+    <p class="intro">Add tasks, keep track of what’s done, and focus on what’s next.</p>
+
+    <section class="panel" aria-label="Tasks">
+      <form id="task-form">
+        <label>
+          <span class="sr-only">Task title</span>
+          <input id="title" name="title" maxlength="255" placeholder="What needs doing?" required>
+        </label>
+        <label>
+          <span class="sr-only">Description</span>
+          <textarea id="description" name="description" placeholder="Add a note (optional)"></textarea>
+        </label>
+        <div class="form-actions"><button id="submit-button" type="submit">Add task</button></div>
+      </form>
+
+      <p id="message" role="status" aria-live="polite"></p>
+      <div class="list-heading">
+        <h2>Your tasks</h2>
+        <span id="task-count"></span>
+      </div>
+      <div id="tasks" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <style>
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+  <script>
+    const form = document.querySelector("#task-form");
+    const titleInput = document.querySelector("#title");
+    const descriptionInput = document.querySelector("#description");
+    const submitButton = document.querySelector("#submit-button");
+    const taskList = document.querySelector("#tasks");
+    const taskCount = document.querySelector("#task-count");
+    const message = document.querySelector("#message");
+
+    function showError(error) {
+      message.textContent = error.message;
+    }
+
+    async function request(url, options) {
+      const response = await fetch(url, options);
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Something went wrong. Please try again.");
+      }
+      return result;
+    }
+
+    function makeTaskElement(task) {
+      const item = document.createElement("article");
+      item.className = task.completed ? "task completed" : "task";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(task.completed);
+      checkbox.setAttribute("aria-label", `Mark ${task.title} as ${task.completed ? "incomplete" : "complete"}`);
+      checkbox.addEventListener("change", async () => {
+        checkbox.disabled = true;
+        try {
+          await request(`/tasks/${task.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ completed: checkbox.checked })
+          });
+          await loadTasks();
+        } catch (error) {
+          checkbox.checked = !checkbox.checked;
+          checkbox.disabled = false;
+          showError(error);
+        }
+      });
+
+      const content = document.createElement("div");
+      const title = document.createElement("p");
+      title.className = "task-title";
+      title.textContent = task.title;
+      content.append(title);
+
+      if (task.description) {
+        const description = document.createElement("p");
+        description.className = "task-description";
+        description.textContent = task.description;
+        content.append(description);
+      }
+
+      const removeButton = document.createElement("button");
+      removeButton.className = "delete-button";
+      removeButton.type = "button";
+      removeButton.textContent = "Delete";
+      removeButton.setAttribute("aria-label", `Delete ${task.title}`);
+      removeButton.addEventListener("click", async () => {
+        removeButton.disabled = true;
+        try {
+          await request(`/tasks/${task.id}`, { method: "DELETE" });
+          await loadTasks();
+        } catch (error) {
+          removeButton.disabled = false;
+          showError(error);
+        }
+      });
+
+      item.append(checkbox, content, removeButton);
+      return item;
+    }
+
+    async function loadTasks() {
+      message.textContent = "";
+      try {
+        const tasks = await request("/tasks");
+        taskList.replaceChildren();
+        taskCount.textContent = `${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`;
+        if (tasks.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "No tasks yet. Add one above to get started.";
+          taskList.append(empty);
+          return;
+        }
+        tasks.forEach((task) => taskList.append(makeTaskElement(task)));
+      } catch (error) {
+        showError(error);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "";
+      submitButton.disabled = true;
+      try {
+        await request("/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: titleInput.value,
+            description: descriptionInput.value
+          })
+        });
+        form.reset();
+        titleInput.focus();
+        await loadTasks();
+      } catch (error) {
+        showError(error);
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    loadTasks();
+  </script>
+</body>
+</html>

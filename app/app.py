@@ -1,7 +1,7 @@
 import os
 import mysql.connector
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 
@@ -20,11 +20,7 @@ def get_db_connection():
 # HOME
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({
-        "application": "Task Manager API",
-        "version": "1.0",
-        "status": "running"
-    })
+    return render_template("index.html")
 
 
 # HEALTH CHECK
