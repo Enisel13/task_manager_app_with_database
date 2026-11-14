@@ -1,0 +1,17 @@
+CREATE DATABASE IF NOT EXISTS tasks_db;
+
+USE tasks_db;
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO tasks (title, description, completed) VALUES
+    ('Set up project repository', 'Create the repository and add the initial project files.', TRUE),
+    ('Configure the database', 'Set up the MySQL database and verify the application connection.', TRUE),
+    ('Build the task API', 'Implement endpoints to create, read, update, and delete tasks.', FALSE),
+    ('Add input validation', 'Validate task titles and descriptions before saving them.', FALSE);
