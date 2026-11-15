@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - image: mysql:9
+        name: mysql
+        env:
+          # Use secret in real usage
+          #Най-добре е да се направи с key vault, но за целите на този проект ще го оставя така
+          #после ще се върна да го securne
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: env-config-app
+              key: MYSQL_PASSWORD
+        ports:
+        - containerPort: 3306
+          name: mysql
+        #съхранявам данните на mysql в отделен volume, за да не се губят при рестарт на контейнера
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /docker-entrypoint-initdb.d
+
+        startupProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 5
+          failureThreshold: 10
+          periodSeconds: 10
+          
+          #закачам volume с конфигурацията на mysql, за да може да се променя конфигурацията без да се rebuild-ва контейнера
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
+
+      - name: mysql-config
+        configMap:
+          name: mysql-config
+      
