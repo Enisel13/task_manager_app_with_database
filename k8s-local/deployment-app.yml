@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-manager-deployment
+  labels:
+    app: task-manager
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: task-manager
+  template:
+    metadata:
+      labels:
+        app: task-manager
+        sherif: az
+    spec:
+      containers:
+      - name: task-manager-container
+        image: containerregistrytaskmanager.azurecr.io/task-manager-app:v7
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: env-config-app

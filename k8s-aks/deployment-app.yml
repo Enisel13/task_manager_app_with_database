@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: task-manager-container
-        image: task-manager-app:v3
+        image: containerregistrytaskmanager.azurecr.io/task-manager-app:v7
         ports:
         - containerPort: 80
         envFrom:

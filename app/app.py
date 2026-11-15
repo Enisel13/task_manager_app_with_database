@@ -20,7 +20,10 @@ def get_db_connection():
 # HOME
 @app.route("/", methods=["GET"])
 def home():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        app_version=os.getenv("APP_VERSION", "dev")
+    )
 
 
 # HEALTH CHECK

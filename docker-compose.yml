@@ -35,7 +35,6 @@ services:
       - my-volume:/var/lib/mysql
     networks:
       - flask-sql
-    
 
 volumes:
   my-volume:

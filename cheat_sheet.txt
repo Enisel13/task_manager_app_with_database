@@ -1,0 +1,4 @@
+kubectl delete -f k8s
+
+docker compose up -d --build #build-ва ми контейнерите
+docker compose ps
