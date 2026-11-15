@@ -17,7 +17,9 @@ spec:
     spec:
       containers:
       - name: task-manager-container
-        image: task-manager-app:v1
+        image: task-manager-app:v3
         ports:
         - containerPort: 80
-        
+        envFrom:
+        - configMapRef:
+            name: env-config-app

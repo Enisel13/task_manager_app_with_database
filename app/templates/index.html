@@ -103,6 +103,22 @@
     .delete-button:hover { background: #fff0ed; color: #862e25; }
     .empty { margin: 0; padding: 20px; color: #748078; text-align: center; }
 
+    .devops-prompt { margin-bottom: 20px; text-align: center; }
+    .devops-prompt h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    .answer-area {
+      position: relative;
+      min-height: 112px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      overflow: hidden;
+    }
+    .answer-area button { width: 80px; min-width: 76px; justify-self: center; }
+    #no-button { position: absolute; transition: left 160ms ease, top 160ms ease; }
+    #answer-feedback { min-height: 1.4em; margin: 8px 0 0; color: #46735a; }
+
     @media (max-width: 520px) {
       body { padding: 30px 14px; }
       .panel { padding: 18px; }
@@ -116,6 +132,15 @@
     <p class="eyebrow">Task Manager</p>
     <h1>Make a little progress.</h1>
     <p class="intro">Add tasks, keep track of what’s done, and focus on what’s next.</p>
+
+    <section class="panel devops-prompt" aria-labelledby="devops-question">
+      <h2 id="devops-question">Am I good DevOps?</h2>
+      <div class="answer-area" id="answer-area">
+        <button id="yes-button" type="button">Yes</button>
+        <button id="no-button" type="button">No</button>
+      </div>
+      <p id="answer-feedback" aria-live="polite"></p>
+    </section>
 
     <section class="panel" aria-label="Tasks">
       <form id="task-form">
@@ -160,6 +185,80 @@
     const taskList = document.querySelector("#tasks");
     const taskCount = document.querySelector("#task-count");
     const message = document.querySelector("#message");
+    const answerArea = document.querySelector("#answer-area");
+    const yesButton = document.querySelector("#yes-button");
+    const noButton = document.querySelector("#no-button");
+    const answerFeedback = document.querySelector("#answer-feedback");
+
+    function moveNoButton(pointerEvent) {
+      const areaBounds = answerArea.getBoundingClientRect();
+      const yesBounds = yesButton.getBoundingClientRect();
+      const buttonWidth = noButton.offsetWidth;
+      const buttonHeight = noButton.offsetHeight;
+      const padding = 8;
+      const maxLeft = areaBounds.width - buttonWidth - padding;
+      const maxTop = areaBounds.height - buttonHeight - padding;
+      const yesLeft = yesBounds.left - areaBounds.left;
+      const yesTop = yesBounds.top - areaBounds.top;
+      const pointerX = pointerEvent ? pointerEvent.clientX - areaBounds.left : null;
+      const pointerY = pointerEvent ? pointerEvent.clientY - areaBounds.top : null;
+
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        const left = padding + Math.random() * (maxLeft - padding);
+        const top = padding + Math.random() * (maxTop - padding);
+        const overlapsYes = left < yesLeft + yesButton.offsetWidth + 12
+          && left + buttonWidth > yesLeft - 12
+          && top < yesTop + yesButton.offsetHeight + 8
+          && top + buttonHeight > yesTop - 8;
+        const tooCloseToPointer = pointerEvent
+          && Math.hypot(
+            left + buttonWidth / 2 - pointerX,
+            top + buttonHeight / 2 - pointerY
+          ) < buttonWidth / 2 + 24;
+
+        if (!overlapsYes && !tooCloseToPointer) {
+          noButton.style.left = `${left}px`;
+          noButton.style.top = `${top}px`;
+          return;
+        }
+      }
+    }
+
+    function positionNoButtonBesideYes() {
+      const areaBounds = answerArea.getBoundingClientRect();
+      const yesBounds = yesButton.getBoundingClientRect();
+      const padding = 8;
+      const maxLeft = areaBounds.width - noButton.offsetWidth - padding;
+      const leftOfYes = yesBounds.left - areaBounds.left - noButton.offsetWidth - 12;
+      const rightOfYes = yesBounds.right - areaBounds.left + 12;
+      const left = rightOfYes <= maxLeft ? rightOfYes : Math.max(padding, leftOfYes);
+      const top = (areaBounds.height - noButton.offsetHeight) / 2;
+
+      noButton.style.left = `${left}px`;
+      noButton.style.top = `${top}px`;
+    }
+
+    answerArea.addEventListener("pointermove", (event) => {
+      const noBounds = noButton.getBoundingClientRect();
+      if (Math.hypot(
+        event.clientX - (noBounds.left + noBounds.width / 2),
+        event.clientY - (noBounds.top + noBounds.height / 2)
+      ) < 76) {
+        moveNoButton(event);
+      }
+    });
+
+    noButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      moveNoButton(event);
+    });
+
+    yesButton.addEventListener("click", () => {
+      answerFeedback.textContent = "Yes! Keep shipping and learning.";
+    });
+
+    positionNoButtonBesideYes();
+    window.addEventListener("resize", positionNoButtonBesideYes);
 
     function showError(error) {
       message.textContent = error.message;
