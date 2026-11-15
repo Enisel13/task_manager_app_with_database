@@ -21,6 +21,7 @@ spec:
           image: containerregistrytaskmanager.azurecr.io/task-manager-app:v6
           ports:
             - containerPort: 5001
+            ###########################
           env:
             - name: MYSQL_HOST
               value: "task-manager-mysql-flexible-server.mysql.database.azure.com"
@@ -35,6 +36,10 @@ spec:
                 secretKeyRef:
                   name: mysql-credentials
                   key: password
+
+                  ####################
+                  # to learn more about those 
+                  ################################
           volumeMounts:
             - name: kv-secrets
               mountPath: /mnt/secrets
@@ -46,3 +51,4 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: task-manager-kv
+              ##################################

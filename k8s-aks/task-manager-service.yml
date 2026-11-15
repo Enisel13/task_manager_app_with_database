@@ -15,7 +15,6 @@
 #       targetPort: 5001 #na app-a port-a (na container-a)
 #       nodePort: 32000 #port-a, на който ще се достъпва от външния свят (na nod-a)
 
-
 apiVersion: v1
 kind: Service
 metadata:
