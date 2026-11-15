@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         app: mysql
+        enisel: az 
     spec:
       containers:
       - image: mysql:9
@@ -41,7 +42,7 @@ spec:
           initialDelaySeconds: 5
           failureThreshold: 10
           periodSeconds: 10
-          
+
           #закачам volume с конфигурацията на mysql, за да може да се променя конфигурацията без да се rebuild-ва контейнера
       volumes:
       - name: mysql-persistent-storage
