@@ -1,25 +1,48 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: task-manager-deployment
-  labels:
-    app: task-manager
+  name: task-manager-app
+  namespace: default
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: task-manager
+      app: task-manager-app
   template:
     metadata:
       labels:
-        app: task-manager
+        app: task-manager-app
         sherif: az
+        azure.workload.identity/use: "true"
     spec:
+      serviceAccountName: default
       containers:
-      - name: task-manager-container
-        image: containerregistrytaskmanager.azurecr.io/task-manager-app:v7
-        ports:
-        - containerPort: 80
-        envFrom:
-        - configMapRef:
-            name: env-config-app
+        - name: task-manager-app
+          image: containerregistrytaskmanager.azurecr.io/task-manager-app:v6
+          ports:
+            - containerPort: 5001
+          env:
+            - name: MYSQL_HOST
+              value: "task-manager-mysql-flexible-server.mysql.database.azure.com"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_DATABASE
+              value: "tasks_db"
+            - name: MYSQL_USER
+              value: "mysqladmin"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: password
+          volumeMounts:
+            - name: kv-secrets
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: kv-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: task-manager-kv
