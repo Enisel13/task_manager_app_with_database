@@ -1,20 +1,4 @@
-## for local testing 
-
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: task-manager-service
-# spec:
-#   selector:
-#   #testing label matching , по принцип е app: task-manager, но за да се тества дали работи, ще го направя с label matching
-#     sherif: az
-#   type: NodePort
-#   ports:
-#     - protocol: TCP
-#       port: 8080 #port-a, на който ще се достъпва от вътрешната мрежа (na pod-a)
-#       targetPort: 5001 #na app-a port-a (na container-a)
-#       nodePort: 32000 #port-a, на който ще се достъпва от външния свят (na nod-a)
-
+# for local testing 
 
 apiVersion: v1
 kind: Service
@@ -24,9 +8,11 @@ spec:
   selector:
   #testing label matching , по принцип е app: task-manager, но за да се тества дали работи, ще го направя с label matching
     sherif: az
-  type: LoadBalancer
+  type: NodePort
   ports:
     - protocol: TCP
-      port: 80 #port-a, на който ще се достъпва от вътрешната мрежа (na pod-a)
+      port: 8080 #port-a, на който ще се достъпва от вътрешната мрежа (na pod-a)
       targetPort: 5001 #na app-a port-a (na container-a)
-  
+      nodePort: 32000 #port-a, на който ще се достъпва от външния свят (na nod-a)
+
+
