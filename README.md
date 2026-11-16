@@ -20,9 +20,10 @@ At runtime, AKS pulls the app image from ACR, and the pod uses workload identity
 
 ### Docker Compose (local)
 
-Set the `MYSQL_*` values in `.env` (the app's database host should be `mysql`), then run from the repository root:
+Copy `.env.example` to `.env`, set your local `MYSQL_*` values there (the app's database host should be `mysql`), and do not commit `.env`. The example file contains placeholders and can be committed. Then run from the repository root:
 
 ```sh
+cp .env.example .env
 docker compose up --build
 ```
 
